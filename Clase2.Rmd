@@ -1,0 +1,128 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+library(tidyverse)
+str(mpg)
+```
+
+```{r}
+qplot(displ,hwy, data = mpg)
+```
+
+```{r}
+qplot(displ,hwy, data = mpg , color = drv, shape = drv)
+```
+
+```{r}
+qplot(displ,hwy, data = mpg , geom = c("point","smooth"))
+```
+
+```{r}
+qplot(hwy, data = mpg, fill = drv , binwidth = 2)
+```
+
+
+```{r}
+qplot(drv ,hwy ,data = mpg , geom = c('boxplot'))
+```
+
+```{r}
+qplot(hwy ,data = mpg , facets = drv ~ ., binwidth = 2)
+```
+
+```{r}
+qplot(hwy ,data = mpg , facets = drv ~ ., binwidth = 2 , fill =  drv)
+```
+
+```{r}
+qplot(hwy, data = mpg, facets = .~ drv, geom = 'density', fill = drv)
+``` 
+
+### GGPLOT2
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth()
+```
+
+```{r}
+ggplot(mpg, aes(x = hwy, fill = drv)) + 
+  geom_histogram(binwidth = 2)
+```
+
+```{r}
+ggplot(mpg, aes(x = hwy, fill = drv)) + 
+  geom_histogram(binwidth = 2) + 
+  facet_grid(drv ~ .)
+```
+
+```{r}
+
+ggplot( mpg, aes(x = hwy , fill = drv)) + 
+  geom_density() + 
+  facet_grid(drv ~ .)
+```
+
+### datos test 
+
+```{r}
+df <- read.csv("C:/Users/Omar/Documents/Analytics based on Classification and Regression Trees/bmi_pm25_no2_sim.csv")
+```
+
+
+Mouse Allergen and Asthma Cohort Study (MAACS)
+
+“Are overweight individuals, as measured by body mass index (BMI), more susceptible than normal weight individuals to the harmful effects of PM2.5 on asthma symptoms?”
+
+https://laqm.defra.gov.uk/public-health/pm25.html
+
+NocturnalSymp, is the number of days in the past 2 weeks where the child experienced asthma symptoms (e.g. coughing, wheezing) while sleeping.
+
+```{r}
+#df$NocturnalSympt <- as.factor(df$NocturnalSympt)
+ggplot(df, aes(x= logpm25, y = NocturnalSympt)) + 
+  geom_point( color = "steelblue", size = 4 , alpha = 0.5) + 
+  geom_smooth(method = 'lm') + 
+  facet_grid(bmicat ~ . ) + 
+  labs(title = 'MAACS Cohort') + 
+  labs(x = expression('log' * PM[2.5]), y = 'Noctrunal')  + 
+  coord_cartesian(ylim = c(0,5)) 
+  #annotate('text', x = c(1.1,1.8), y = c(1,2), label = c('here', 'here2') , color = c('red', 'blue') )
+  #ylim(0,5)
+  #theme_bw(base_family = 'TT Times New Roman')
+```
+## Testing 
+
+```{r}
+#install.packages('nycflights13')
+library(nycflights13)
+```
+
+```{r}
+flights
+```
+
+
