@@ -151,14 +151,10 @@ ggplot(daily, aes(x = day, y = log(count,2), color = dest, shape = dest)) +
 ```
 
 ```{r}
-x <- c()
-y <- c()
-label <- c()
-for ( i in 1:length(unique(flights$dest))) {
-  x[i] <-  sample(unique(daily$day),1)
-  label[i] <-  unique(flights$dest)[i]
-  
+loc <- 0
+for ( destination in unique(flights$dest)) {
+  tmp = filter(daily, dest == destination)
+  append(loc,tmp[sample(length(tmp),1),])
 }
-
 ```
 

@@ -1,0 +1,36 @@
+---
+title: "Clase 3 - Actividad"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(nycflights13)
+ls("package:nycflights13")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+```{r}
+glimpse(weather)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+
+```{r}
+g <- ggplot(weather, aes(x = temp,y=..density..))
+
+ 
+
+g + geom_histogram(binwidth = 5, 
+                   col="black", 
+                   size=0.1) +  # change binwidth
+  labs(title="Histogram with Auto Binning", 
+       subtitle="Engine Displacement across Vehicle Classes") 
+```
+
