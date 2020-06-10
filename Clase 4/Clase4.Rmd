@@ -1,0 +1,163 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(moderndive)
+library(tidyverse)
+library(patchwork)
+```
+
+```{r}
+glimpse(house_prices)
+```
+
+
+```{r}
+p1 <- ggplot(house_prices, aes(x = price)) + 
+  geom_histogram(fill = 'gray', color = 'white') + 
+  labs (x = 'price(USd)', title = ' House price')
+p1
+```
+
+```{r}
+p2 <- ggplot(house_prices, aes(x = sqft_above)) + 
+  geom_histogram(fill = 'orange', color = 'white') + 
+  labs (x = 'sqft_above', title = ' House size')
+p2
+```
+
+```{r}
+p3 <- ggplot(house_prices, aes(x = condition)) + 
+  geom_bar(aes(fill = condition)) + 
+  labs(x = 'condition', title = 'house condition') + 
+  theme(legend.position = 'none')
+p3
+```
+## Plots juntos
+
+```{r}
+(p2) / (p1 + p3)
+```
+
+```{r}
+house_p <- house_prices
+house_p$sqft_living <- house_p$sqft_living * 0.3048
+hous
+```
+
+```{r}
+p1New <- ggplot(house_prices, aes(x = price*21)) + 
+  geom_histogram(fill = '#9A99F2', color = 'white') + 
+  labs (x = 'price(MXN)', title = ' House price')
+
+p2New <- ggplot(house_prices, aes(x = sqft_living* 0.09)) + 
+  geom_histogram(fill = 'orange', color = 'white') + 
+  labs (x = 'Squared Meters', title = ' House size')
+
+p3New <- ggplot(house_prices, aes(x = condition)) + 
+  geom_bar(aes(fill = condition)) + 
+  labs(x = 'condition', title = 'house condition') + 
+  theme(legend.position = 'none')
+
+(p2New) / (p1New + p3New)
+
+```
+
+```{r}
+house_prices %>% 
+  summarize(mean_price = mean(price*21),
+            median_price = median(price*21),
+            sd_price = sd(price*21))
+```
+
+```{r}
+house_prices %>% 
+  summarize(mean_sqrt_living = mean(sqft_living*0.09),
+            median_sqrt_living = median(sqft_living*0.09),
+            sd_sqrt_living = sd(sqft_living*0.09))
+```
+
+```{r}
+hpNew <- house_prices %>% 
+  mutate(log10price = log10(price*21),
+         log10size = log10(sqft_living*0.09))
+```
+
+```{r}
+p1NewLog <- ggplot(hpNew, aes(x = log10price)) + 
+  geom_histogram(fill = '#74DE59', color = 'white') + 
+  labs (x = 'Log - price(MXN)', title = 'Log  House price')
+p1New + p1NewLog
+```
+
+```{r}
+p2NewLog <- ggplot(hpNew, aes(x = log10size)) + 
+  geom_histogram(fill = '#B7FA64', color = 'white') + 
+  labs (x = 'Squared Meters', title = ' House size')
+p2New + p2NewLog
+```
+
+```{r}
+ggplot(hpNew, aes(x = log10price , y = log10size, color = condition)) + 
+  geom_point(alpha = 0.5) +
+  scale_color_manual(values=c("#213437", "#E69F00", "#56B4E9", "#93E8F5" , "#6DABB5")) + 
+  facet_wrap(~condition)
+```
+
+```{r}
+prices_prediction <- lm(log10price ~ log10size * condition, data = hpNew)
+parameters <- get_regression_table(prices_prediction)
+parameters
+```
+
+```{r}
+summary(prices_prediction)
+```
+
+```{r}
+params <- parameters$estimate
+prediction <- function(params, size, indx) {
+output <- if(indx == 1) params[1] + params[2] *log10(size) else (params[1] + params[1+indx]) +  (params[2] + params[5+indx]) *log10(size)
+return(10^(output)) # going back to dollars
+}
+prediction(params, 170, 5)
+```
+
+# Actividad: Relaciones entre algunas otras dos variables.
+
+```{r}
+glimpse(house_prices)
+```
+
+```{r}
+ggplot(house_prices, aes(y = price, x = grade, color = factor(bedrooms))) + 
+  geom_jitter()
+```
+
+```{r}
+ggplot(house_prices, aes(x = bedrooms)) + 
+  geom_bar(fill = "#F5B95F")
+```
+
+```{r}
+prices_prediction <- lm(price ~ grade + bedrooms, data = house_prices)
+parameters <- get_regression_table(prices_prediction)
+parameters
+```
+
+```{r}
+summary(prices_prediction)
+```
+
+```{r}
+newD = data.frame(grade = 6, bedrooms = 5)
+newD$grade = as.factor(newD$grade)
+predict(prices_prediction, newD)
+```
+
