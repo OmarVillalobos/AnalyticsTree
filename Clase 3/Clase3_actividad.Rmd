@@ -27,10 +27,20 @@ g <- ggplot(weather, aes(x = temp,y=..density..))
 
  
 
-g + geom_histogram(binwidth = 5, 
-                   col="black", 
+g + geom_histogram(col = 'white',
+                   fill="#B06EF5", 
                    size=0.1) +  # change binwidth
-  labs(title="Histogram with Auto Binning", 
-       subtitle="Engine Displacement across Vehicle Classes") 
+  labs(title="Histogram") 
+```
+
+```{r}
+ggplot(weather, aes(x = temp,y=..density.. , fill = factor(month))) + 
+  geom_histogram(alpha = 0.8, color = 'white')
+```
+
+```{r}
+ggplot(weather, aes(x = factor(month), y = humid, color = factor(month))) + 
+  geom_boxplot() + 
+  theme(legend.position = 'none')
 ```
 
