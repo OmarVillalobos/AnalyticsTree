@@ -5,6 +5,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(nycflights13)
+library(tidyverse)
 ls("package:nycflights13")
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -15,6 +16,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 glimpse(weather)
+weather <- weather
+weather$origin <- as.factor(weather$origin)
+weather$wind_dir <- as.factor(weather$wind_dir)
+weather <- weather %>% drop_na(wind_dir)
 ```
 
 ## Including Plots
@@ -24,9 +29,6 @@ You can also embed plots, for example:
 
 ```{r}
 g <- ggplot(weather, aes(x = temp,y=..density..))
-
- 
-
 g + geom_histogram(col = 'white',
                    fill="#B06EF5", 
                    size=0.1) +  # change binwidth
@@ -42,5 +44,24 @@ ggplot(weather, aes(x = temp,y=..density.. , fill = factor(month))) +
 ggplot(weather, aes(x = factor(month), y = humid, color = factor(month))) + 
   geom_boxplot() + 
   theme(legend.position = 'none')
+```
+
+
+
+```{r}
+ggplot(weather, aes(x = wind_dir, fill  = factor(month))) + 
+  geom_bar() + 
+  coord_polar(theta = "x")
+```
+
+```{r}
+g <- ggplot(weather, aes(factor(month), humid))
+g + geom_boxplot(aes(fill=factor(month))) +  
+  scale_fill_brewer(palette = "Spectral") +
+  theme(axis.text.x = element_text(angle=65, vjust=0.6)) +
+  labs(title="Monthly Humidity",
+       subtitle="Box-plots",
+       x="Month",
+       y="Relative humidity")
 ```
 
