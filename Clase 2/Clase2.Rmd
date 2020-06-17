@@ -139,22 +139,39 @@ ggplot(daily, aes(x = day, y = log(count,2), color = dest, shape = dest)) +
   labs(title = 'Flights') + 
   labs(x = 'day', y = 'Number of flights')
 ```
-
 ```{r}
-ggplot(daily, aes(x = day, y = log(count,2), color = dest, shape = dest)) + 
-  geom_line() +
-  theme(legend.position = "none") + 
-  scale_shape_manual(values = rep(c(1,2,3,7,8,9,10), 16)) +
-  labs(title = 'Flights') + 
-  labs(x = 'day', y = 'Number of flights') + 
-  annotate('text', x = c(1.1,1.8), y = c(1,2), label = c('here', 'here2') , color = c('red', 'blue'))
+loc <- list()
+for ( destination in unique(flights$dest)) {
+  tmp = filter(daily, dest == destination)
+  loc[[destination]] <- sample_n(tmp,1)
+}
+loc <- do.call(rbind, loc)
 ```
 
 ```{r}
-loc <- 0
-for ( destination in unique(flights$dest)) {
-  tmp = filter(daily, dest == destination)
-  append(loc,tmp[sample(length(tmp),1),])
-}
+ggplot(daily, aes(x = day, y = count, color = dest, shape = dest)) + 
+  geom_line() +
+  theme(legend.position = "none") + 
+  scale_y_continuous(name='number of flights',
+                     trans= 'log2',
+                     breaks= c(1 ,2,4,8,16,32,64,128,256,512)) +
+  scale_x_continuous(name= 'day',
+                     breaks= c(0,5,10,15,20,25,30)) +
+  scale_shape_manual(values = rep(0:5, 20)) + 
+  labs(title = 'Flights') + 
+  labs(x = 'day', y = 'Number of flights') + 
+  annotate('text', x = loc$day, y = loc$count, label = loc$dest, size =2.5 )
+```
+
+```{r}
+daily <- flights %>%
+  select(dest,dep_delay, distance)
+daily$dep_delay <- daily$dep_delay - min(df$dep_delay,na.rm = TRUE)
+  
+```
+
+```{r}
+ggplot(daily, aes(x = dest, y = distance, size = dep_delay, colour = dep_delay)) + 
+  geom_point()
 ```
 
