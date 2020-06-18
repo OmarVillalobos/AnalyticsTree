@@ -60,10 +60,9 @@ ui <- fluidPage(
 server <- function(input, output) {
 
     output$house <- renderPlot({
-        # draw the histogram with the specified number of bins
-        ggplot(house_prices, aes(x = grade, y =price)) +
-            geom_point() +
-            models[[input$model]]
+        ggplot(house_prices, aes(x = as.integer(grade), y =price)) +
+        geom_point() +
+        models[[input$model]]
     })
 }
 
