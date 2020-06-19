@@ -17,9 +17,11 @@ library(patchwork)
 house_prices <- house_prices %>% mutate(
     log10_price = log10(price), log10_size = log10(sqft_living))
 
+mpg <- mpg
+
 models <- list('Log' = geom_smooth() , 'Linear' = geom_smooth(method = lm, formula = y ~ x))
 
-
+fators <- list('Condition' = condition, 'Bedrooms' = bedrooms)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -30,7 +32,8 @@ ui <- fluidPage(
     # Sidebar with a slider input for number of bins 
     sidebarLayout(position = 'right',
         sidebarPanel(
-            selectInput("model", label = h4("Data model"), choices = names(models))
+            selectInput("model", label = h4("Data model"), choices = names(models)
+                        )
         ),
 
         # Show a plot of the generated distribution
@@ -41,11 +44,9 @@ ui <- fluidPage(
     ),
     sidebarLayout(position = 'right',
                   sidebarPanel(
-                      sliderInput("bins",
-                                  "Number of bins:",
-                                  min = 1,
-                                  max = 50,
-                                  value = 30)
+                      selectInput('factor', label = h4('Only factors'), choices = names(factors)
+                                  )
+                      
       ),
       
       # Show a plot of the generated distribution
