@@ -1,0 +1,65 @@
+---
+title: "kmeans_images"
+author: "Lazaro Alonso"
+date: "6/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Extracting dominant colours from pictures
+
+```{r}
+#install.packages("imager")
+library(imager)
+file <- "autumn_drawing_walking_82963_320x480.jpg"
+#file
+im <- load.image(file)
+plot(im)
+#file
+```
+
+```{r}
+library(tidyverse)
+bdf <- as.data.frame(im, wide="c")
+bdf
+```
+```{r}
+im <- load.image(file)
+get_k_colors <- function(i, n) { 
+  tmp <- as.data.frame(im, wide="c")
+  tmp <- kmeans(tmp[,c(3,4,5)], centers = n)
+  return (rgb(tmp$centers))
+}
+```
+```{r}
+tmp <- get_k_colors(bdf[,c(3,4,5)],3)
+```
+
+
+```{r}
+rgb(0.20,0.21,0.58)
+```
+
+```{r}
+ggplot(data.frame(x = 0, y = 0), aes(x, y)) + 
+  geom_point(size = 25,  color = "#333694")
+
+```
+```{r}
+data.frame(x =0, y = 0)
+```
+
+```{r}
+x = c(0, 0, 0) 
+y = c(0, 1, 2) 
+df = data.frame(x, y) 
+df
+```
+```{r}
+ggplot(as.data.frame(tmp), aes(x = tmp)) + 
+  geom_bar(size = 25,  fill = tmp)
+```
+

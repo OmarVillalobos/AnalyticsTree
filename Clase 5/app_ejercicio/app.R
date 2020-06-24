@@ -20,7 +20,6 @@ house_prices <- house_prices %>% mutate(
 mpg <- mpg
 
 models <- list('Log' = geom_smooth() , 'Linear' = geom_smooth(method = lm, formula = y ~ x))
-
 fators <- list('Condition' = condition, 'Bedrooms' = bedrooms)
 
 # Define UI for application that draws a histogram
@@ -51,8 +50,8 @@ ui <- fluidPage(
       
       # Show a plot of the generated distribution
       mainPanel(
-          h2('House Prices', align = 'Center'),
-          plotOutput("distPlot2")
+          h2('Cars', align = 'Center'),
+          plotOutput("Cars")
       )
     )
 )
@@ -64,6 +63,9 @@ server <- function(input, output) {
         ggplot(house_prices, aes(x = as.integer(grade), y =price)) +
         geom_point() +
         models[[input$model]]
+    })
+    output$Cars <- renderPlot({
+      
     })
 }
 
