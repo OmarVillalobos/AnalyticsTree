@@ -19,43 +19,61 @@ house_prices <- house_prices %>% mutate(
 
 mpg <- mpg
 
+weather <- weather
+weather$origin <- as.factor(weather$origin)
+weather$wind_dir <- as.factor(weather$wind_dir)
+weather <- weather %>% drop_na(wind_dir)
+
 models <- list('Log' = geom_smooth() , 'Linear' = geom_smooth(method = lm, formula = y ~ x))
-fators <- list('Condition' = condition, 'Bedrooms' = bedrooms)
+factors <- list('Drive' = mpg$drv, 'Cyl' = mpg$cyl)
+times <- list('Month' = as.factor(as.integer(weather$month)), 'Visibility' = as.factor(as.integer(weather$visib)))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-
-    # Application title
-    titlePanel("Ejercicio Shiny App"),
-
+    navbarPage(a('Ejercicio Shiny App'),
+               tabPanel('House Prices',
+                        sidebarLayout(
+                          position = 'right',
+                          sidebarPanel(selectInput(
+                            "model",
+                            label = h4("Data model"),
+                            choices = names(models)
+                          )),
+                          
+                          # Show a plot of the generated distribution
+                          mainPanel(h2('House Prices', align = 'Center'),
+                                    plotOutput("house"))
+                        )),
+               tabPanel('Cars',
+                        sidebarLayout(
+                          position = 'right',
+                          sidebarPanel(selectInput(
+                            'factor',
+                            label = h4('Only factors'),
+                            choices = names(factors)
+                          )),
+                          
+                          # Show a plot of the generated distribution
+                          mainPanel(h2('Cars', align = 'Center'),
+                                    plotOutput("Cars"))
+                        )),
+               tabPanel("Weather",
+                        sidebarLayout(
+                          position = 'right',
+                          sidebarPanel(selectInput(
+                            'time',
+                            label = h4('Options'),
+                            choices = names(times)
+                          )),
+                          
+                          # Show a plot of the generated distribution
+                          mainPanel(h2('Weather', align = 'Center'),
+                                    plotOutput("Time"))
+                        ))
+    ) 
     # Sidebar with a slider input for number of bins 
-    sidebarLayout(position = 'right',
-        sidebarPanel(
-            selectInput("model", label = h4("Data model"), choices = names(models)
-                        )
-        ),
 
-        # Show a plot of the generated distribution
-        mainPanel(
-           h2('House Prices', align = 'Center'),
-           plotOutput("house")
-        )
-    ),
-    sidebarLayout(position = 'right',
-                  sidebarPanel(
-                      selectInput('factor', label = h4('Only factors'), choices = names(factors)
-                                  )
-                      
-      ),
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-          h2('Cars', align = 'Center'),
-          plotOutput("Cars")
-      )
-    )
 )
-
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
@@ -65,7 +83,16 @@ server <- function(input, output) {
         models[[input$model]]
     })
     output$Cars <- renderPlot({
-      
+      g <- ggplot(mpg, aes(manufacturer))
+      g + geom_bar(aes(fill=as.factor(factors[[input$factor]])), width = 0.5) +
+        theme(axis.text.x = element_text(angle=65, vjust=0.7)) +
+        labs(title="Histogram on Categorical Variable",
+             subtitle="Manufacturer across Vehicle Classes")
+    })
+    output$Time <- renderPlot({
+      ggplot(weather, aes(x = wind_dir, fill  = times[[input$time]])) + 
+        geom_bar() + 
+        coord_polar(theta = "x")
     })
 }
 
