@@ -21,7 +21,6 @@ get_k_colors <- function(i, n) {
     return (rgb(tmp$centers))
 }
 
-
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
@@ -59,7 +58,7 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     tmp <- reactive({
-        if (is.na(input$file$datapath)) {
+        if (is.null(input$file$datapath)) {
             return (input$url)
         } else {
             return (gsub("\\\\", "/", input$file$datapath))
@@ -73,8 +72,12 @@ server <- function(input, output) {
              width = '25%')
         
     },deleteFile = FALSE)
+    
+    output$url_img <- renderUI({
+        tags$img(src = input$url)
+    })
     output$kcolors <- renderPlot({
-        im <- load.image(gsub("\\\\", "/", input$file$datapath))
+        im <- load.image(tmp())
         tmp <- get_k_colors(im,input$clusters)
         ggplot(as.data.frame(tmp), aes(x = tmp)) +
             geom_bar(size = 25,  fill = tmp)
