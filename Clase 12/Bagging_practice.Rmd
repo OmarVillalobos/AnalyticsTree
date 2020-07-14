@@ -1,0 +1,83 @@
+---
+title: "Baggind_practice"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(moderndive)
+library(tidyverse)
+library(patchwork)
+library(tidymodels)
+library(modeldata)
+library(baguette)
+library(ROCR)
+```
+
+```{r}
+glimpse(house_prices)
+```
+# Regression
+## Data selection
+
+```{r}
+data <- house_prices %>%
+  select(price, bedrooms,bathrooms,sqft_living)
+data$bedrooms <- as.integer(data$bedrooms)
+```
+## Training Dataset
+
+```{r}
+train <- sample(1:nrow(data), nrow(data)*0.7)
+```
+
+```{r}
+data.test <- data[-train,]
+data.train <- data[train,]
+```
+
+```{r}
+ctrl <- control_bag(var_imp = TRUE)
+set.seed(7687)
+house.bagg <- bagger(price ~ ., data = data.train, base_model = "MARS", times = 5,
+                   control = ctrl)
+house.bagg
+```
+```{r}
+info.bag <- predict(house.bagg, data.test)
+sd(data.test$price - info.bag$.pred)
+```
+
+
+# Classification 
+```{r}
+data.c <- house_prices %>%
+  dplyr::select(grade, price, bedrooms, bathrooms, sqft_living, sqft_lot,condition)
+data.c$grade <- as.factor(data.c$grade)
+```
+
+```{r}
+train <- sample(1:nrow(data.c), nrow(data.c)*0.7)
+```
+
+```{r}
+ctrl <- control_bag(var_imp = TRUE)
+set.seed(7687)
+house.bagg.c <- bagger(grade ~ ., data = data.c[train,], base_model = "C5.0",
+                   control = ctrl)
+house.bagg.c
+```
+
+```{r}
+info.bag.c <- predict(house.bagg.c, data.c[-train,])
+```
+
+```{r}
+library(caret)
+confusionMatrix(info.bag.c$.pred_class, data.c[-train,]$grade)
+```
+

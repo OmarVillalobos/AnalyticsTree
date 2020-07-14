@@ -1,0 +1,147 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(tidyverse)
+library(dslabs)
+```
+
+```{r}
+mnist <- dslabs::read_mnist()
+glimpse(mnist)
+```
+
+```{r}
+features <- mnist$train$images
+glimpse(features)
+```
+
+```{r}
+str(features[1,])
+d <- matrix(features[1,], nrow = 28, byrow = TRUE)
+```
+
+```{r}
+library(reshape2)
+digito <- melt(d)
+```
+
+```{r}
+ggplot(digito, aes(x= Var2, y= Var1)) + 
+  geom_raster(aes(fill = value))
+```
+
+```{r}
+library(patchwork)
+p <- function(i){
+  d <- matrix(features[i,], nrow = 28, byrow = TRUE)
+  digito <- melt(d)
+  ggplot(digito, aes(x= Var2, y= Var1)) + 
+  geom_raster(aes(fill = value)) + 
+    scale_y_reverse() + 
+    theme(legend.position = 'none')
+  
+}
+```
+
+```{r}
+p(1) + p(2)
+```
+
+```{r}
+digit_labels <- mnist$train$labels
+```
+
+```{r}
+digit_labels[1]
+c(1,0,3,5,6,8,10,13)
+```
+
+```{r}
+mean_digit <- list()
+numbers <- match(1:9,digit_labels)
+
+for (i in 1:length(numbers)) {
+  print(numbers[i])
+  hist(features[numbers[i],])
+  mean_digit[i] <- mean(features[i,])
+}
+
+which(digit_labels %in% 1)
+```
+
+```{r}
+digits_df <- list()
+for (i in 0:9) { 
+  mean_digit[i] <- mean(features[which(digit_labels %in% i),])
+  print(hist(features[which(digit_labels %in% i),]))
+  digits_df[i] <- as.data.frame(features[which(digit_labels %in% i),])
+  }
+```
+
+```{r}
+mnist_clustering <- kmeans(features, centers = 10, nstart = 10)
+```
+
+```{r}
+p <- function(i){
+  d <- matrix(mnist_clustering$centers[i,], nrow = 28, byrow = TRUE)
+  digito <- melt(d)
+  ggplot(digito, aes(x= Var2, y= Var1)) + 
+  geom_raster(aes(fill = value)) + 
+    scale_y_reverse() + 
+    theme(legend.position = 'none')
+}
+```
+
+```{r}
+p(1) + p(2) + p(3) + p(4) + p(5) + p(6) + p(7) + p(8) + p(9) + p(10)
+```
+
+```{r}
+# Create mode function
+mode_fun <- function(x){  
+  which.max(tabulate(x))
+}
+
+ 
+
+mnist_comparison <- data.frame(
+  cluster = mnist_clustering$cluster,
+  actual = mnist$train$labels
+) %>%
+  group_by(cluster) %>%
+  mutate(mode = mode_fun(actual)) %>%
+  ungroup() %>%
+  mutate_all(factor, levels = 0:9)
+
+ 
+
+# Create confusion matrix and plot results
+yardstick::conf_mat(
+  mnist_comparison, 
+  truth = actual, 
+  estimate = mode
+) %>%
+  autoplot(type = 'heatmap')
+```
+
+```{r}
+library(datasets)
+head(iris)
+```
+
+```{r}
+ggplot(iris) + 
+  geom_point(aes(x = Petal.Length, y= Petal.Width, color = Species), size = 2) + 
+  geom_point(aes(x = Petal.Length, y = Petal.Width, shape =factor(cluster)), size= 3 ) + 
+  scale_shape_manual(values = c(8, 3, 2))
+```
+
+```{r}
+iris_kmeans <- kmeans(iris[,c(1:4)], centers = 3, nstart = 10)
+```
+
