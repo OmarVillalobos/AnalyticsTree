@@ -16,6 +16,9 @@ library(tidymodels)
 library(modeldata)
 library(baguette)
 library(ROCR)
+library(randomForest)
+library(JOUSBoost)
+library(caret)
 ```
 
 ```{r}
@@ -58,6 +61,9 @@ sd(data.test$price - info.bag$.pred)
 data.c <- house_prices %>%
   dplyr::select(grade, price, bedrooms, bathrooms, sqft_living, sqft_lot,condition)
 data.c$grade <- as.factor(data.c$grade)
+
+data.c <- data.c[!data.c$grade %in% c(1,3,13),]
+data.c$grade <- droplevels(data.c$grade)
 ```
 
 ```{r}
@@ -67,8 +73,7 @@ train <- sample(1:nrow(data.c), nrow(data.c)*0.7)
 ```{r}
 ctrl <- control_bag(var_imp = TRUE)
 set.seed(7687)
-house.bagg.c <- bagger(grade ~ ., data = data.c[train,], base_model = "C5.0",
-                   control = ctrl)
+house.bagg.c <- bagger(grade ~ ., data = data.c[train,], base_model = "C5.0")
 house.bagg.c
 ```
 
@@ -77,7 +82,115 @@ info.bag.c <- predict(house.bagg.c, data.c[-train,])
 ```
 
 ```{r}
-library(caret)
 confusionMatrix(info.bag.c$.pred_class, data.c[-train,]$grade)
 ```
+
+# Boosting
+
+```{r}
+# boosted tree model 
+bt_model <-
+  boost_tree(
+    learn_rate = 0.3,
+    trees = 100,
+    tree_depth = 6,
+    min_n = 1,
+    sample_size = 1,
+    mode = "classification"
+  ) %>% set_engine("xgboost", verbose = 2) %>%  fit(grade ~ ., data = data.c[train,])
+```
+
+```{r}
+info.xgb <- predict(bt_model, data.c[-train,])
+```
+
+```{r}
+confusionMatrix(info.xgb$.pred_class, data.c[-train,]$grade)
+```
+
+# rForest
+
+```{r}
+rf_model <-
+  rand_forest(trees = 1000, mtry = 5, mode = "classification") %>% set_engine("randomForest",
+                                                                              # importance = T to have permutation score calculated
+                                                                              importance = T,
+                                                                              # localImp=T for randomForestExplainer(next post)
+                                                                              localImp = T,) %>% fit(grade ~ ., data = data.c[train,])
+
+```
+
+```{r}
+info.rf <- predict(rf_model, data.c[-train,])
+```
+
+```{r}
+conf_mtrx <- confusionMatrix(info.rf$.pred_class, data.c[-train,]$grade)
+conf_mtrx$overall
+```
+
+```{r}
+tree_opt <- function(data, splt, y, engine){
+  # engine 
+  if (engine == 'classification') {
+    engine <- c('C5.0','classification')
+  } else {
+    engine <- c('MARS', 'regression')
+  }
+  # formula 
+  form <- reformulate(termlabels = c('.'), response = c(y))
+  # training split
+  train <- sample(1:nrow(data), nrow(data)*splt)
+  # Bagger
+  ctrl <- control_bag(var_imp = TRUE)
+  bagg <- bagger(form, data = data[train,], base_model = engine[1])
+  # boosted tree model 
+  bt_model <-
+    boost_tree(
+      learn_rate = 0.3,
+      trees = 5,
+      tree_depth = 6,
+      min_n = 1,
+      sample_size = 1,
+      mode = engine[2]
+    ) %>% set_engine("xgboost", verbose = 2) %>%  fit(form, data = data[train,])
+  # randomForest
+  rf_model <-
+  rand_forest(trees = 10, mtry = 5, mode = engine[2]) %>% set_engine("randomForest",
+                                                                              # importance = T to have permutation score calculated
+                                                                              importance = T,
+                                                                              # localImp=T for randomForestExplainer(next post)
+                                                                              localImp = T,) %>% fit(form, data = data[train,])
+  # predictions 
+  info.bag <- predict(bagg, data[-train,])
+  info.bt <- predict(bt_model, data[-train,])
+  info.rf <- predict(rf_model, data[-train,])
+  # Metrics
+  if (engine == 'classification'){
+    acc.bag <- confusionMatrix(info.bag$.pred_class, (data[-train,]$grade))
+    acc.bt <- confusionMatrix(info.bt$.pred_class, (data[-train,]$grade))
+    acc.rf <- confusionMatrix(info.rf$.pred_class, (data[-train,]$grade))
+    accuracy <- c(acc.bag$overall[1], acc.bt$overall[1], acc.rf$overall[1])
+  } else {
+    acc.bag <- sd(info.bag$.pred_class - data[-train,]$grade)
+    acc.bt <- sd(info.bt$.pred_class - data[-train,]$grade)
+    acc.rf <- sd(info.rf$.pred_class - data[-train,]$grade)
+    accuracy <- c(acc.bag, acc.bt, acc.rf)
+  }
+  # acc.bag <- confusionMatrix(info.bag$.pred_class, (data[-train,]$grade))
+  # acc.bt <- confusionMatrix(info.bt$.pred_class, (data[-train,]$grade))
+  # acc.rf <- confusionMatrix(info.rf$.pred_class, (data[-train,]$grade))
+  # accuracy <- c(acc.bag$overall[1], acc.bt$overall[1], acc.rf$overall[1])
+
+  # Result}
+  
+  model <- c('Bagger', 'Boosted', 'RandomForest')
+  data.frame(model, accuracy)
+}
+```
+
+```{r}
+tmp <- tree_opt(data,0.7,'price', 'regression')
+```
+
 
